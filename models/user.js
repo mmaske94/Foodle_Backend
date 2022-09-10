@@ -1,13 +1,59 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+
+const SALT_ROUNDS = 6;
 
 const userSchema = new mongoose.Schema({
-    firstName: String, 
-    lastName: String,
-    username: String,
-    email: String,
-    password: String, 
-    favoriteRecipes: [String]
+
+    email: {
+        type: String,
+        required: true,
+        
+    },
+    password: {
+        type: String,
+        required: true
+    },
+
+    token: {
+        type: String
+    },
+    favoriteRecipes: {
+        type: [String]
+    }
+});
+
+userSchema.set('toJSON', {
+    transform: function(doc, ret) {
+        delete ret.password;
+        return ret;
+    }
+});
+
+userSchema.methods.comparePassword = function(tryPassword, cb) {
+    bcrypt.compare(tryPassword, this.password, cb);
+};
+
+
+userSchema.pre('save', async function(next){
+    const user = this;
+    if(user.isModified('password')){
+    user.password = await bcrypt.hashSync(user.password, SALT_ROUNDS);
+    }
+    next();
 })
+
+// userSchema.statics.findByCredentials = async function (email, password) {
+//     const user = await User.findOne({email});
+//     if(!user){
+//         throw new Error('Invalid Credentials')
+//     }
+//     const passwordMatch = await bcrypt.compareSync(password, user.password);
+//     if(!passwordMatch){
+//         throw new Error('Invalid Credentials')
+//     }
+//     return user;
+// }
 
 const User = mongoose.model('User', userSchema)
 
