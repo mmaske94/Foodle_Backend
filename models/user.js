@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken')
+const SECRET = process.env.SECRET;
 
 const SALT_ROUNDS = 6;
 
@@ -23,16 +25,6 @@ const userSchema = new mongoose.Schema({
     }
 });
 
-userSchema.set('toJSON', {
-    transform: function(doc, ret) {
-        delete ret.password;
-        return ret;
-    }
-});
-
-userSchema.methods.comparePassword = function(tryPassword, cb) {
-    bcrypt.compare(tryPassword, this.password, cb);
-};
 
 
 userSchema.pre('save', async function(next){
@@ -43,18 +35,34 @@ userSchema.pre('save', async function(next){
     next();
 })
 
-// userSchema.statics.findByCredentials = async function (email, password) {
-//     const user = await User.findOne({email});
-//     if(!user){
-//         throw new Error('Invalid Credentials')
-//     }
-//     const passwordMatch = await bcrypt.compareSync(password, user.password);
-//     if(!passwordMatch){
-//         throw new Error('Invalid Credentials')
-//     }
-//     return user;
-// }
+userSchema.statics.findByCredentials = async function (email, password) {
+    const user = await User.findOne({email});
+    if(!user){
+        throw new Error('Invalid Credentials')
+    }
+    const passwordMatch = await bcrypt.compareSync(password, user.password);
+    if(!passwordMatch){
+        throw new Error('Invalid Credentials')
+    }
+    return user;
+}
 
+userSchema.methods.generateToken = async function () {
+    const user = this;
+    const token = await jwt.sign({_id: user._id}, SECRET, {expiresIn: '24h'});
+    user.token = token;
+    await user.save();
+    return token;
+}
+
+userSchema.methods.toJSON = function(){
+    const user = this;
+    const userObject = user.toObject();
+    delete userObject.password;
+    delete userObject._id;
+    return userObject;
+
+}
 const User = mongoose.model('User', userSchema)
 
 module.exports = User
