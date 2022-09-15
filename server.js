@@ -6,6 +6,7 @@ const cors = require('cors')
 const logger = require('morgan')
 const PORT = process.env.PORT || 4000
 const userRoutes = require('./routes/userRoutes')
+require('dotenv').config()
 require('./db/connection')
 
 app.use(cors())
