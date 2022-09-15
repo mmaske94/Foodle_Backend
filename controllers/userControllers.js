@@ -32,6 +32,7 @@ const autoLogin = async(req,res) => {
 
 const logoutUser = async(req,res) =>{
     const user = req.user;
+    console.log(user)
     user.token = '';
     await user.save();
     res.status(200).send()
@@ -43,7 +44,17 @@ const addToRecipes = async(req,res) => {
     const user = req.user;
     user.favoriteRecipes.push(detailDataID)
     await user.save();
-    res.status(200).send()
+    res.status(200).send(user)
+}
+
+const removeFromRecipes = async(req,res) => {
+    const {detailDataID} = req.body;
+    console.log(detailDataID)
+    const user = req.user;
+    console.log(user)
+    user.favoriteRecipes = user.favoriteRecipes.filter(id => id != detailDataID)
+    await user.save();
+    res.status(200).send(user)
 }
 
 module.exports ={
@@ -52,4 +63,5 @@ module.exports ={
     autoLogin,
     logoutUser,
     addToRecipes,
+    removeFromRecipes
 }
