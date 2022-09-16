@@ -15,9 +15,6 @@ app.use(express.urlencoded({extended: true}));
 
 app.use('/auth', userRoutes)
 
-app.get('/auth', (req, res) => {
-    res.json('Welcome to Foodle')
-})
 
 
 
